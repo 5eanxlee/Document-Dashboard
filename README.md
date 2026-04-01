@@ -21,6 +21,14 @@ cp .env.example .env.local
 
 You can leave `.env.local` without an `OPENAI_API_KEY` if you only want the DocDash dashboard, CLI, and MCP server. Add your own key only if you want the in-app chat features.
 
+### Use Without The Web UI
+
+If you only want Codex, Claude, Cursor MCP, or the DocDash CLI, you do not need the Next.js app running at all.
+
+- Codex uses the global skill and `docdash` MCP server
+- MCP-capable clients can use `bin/docdash-mcp.ts`
+- The CLI works directly through `npm run docdash ...`
+
 ### Environment
 
 Copy `.env.example` to `.env.local` and fill in your own values.
@@ -28,13 +36,36 @@ Copy `.env.example` to `.env.local` and fill in your own values.
 - `OPENAI_API_KEY` is only required for the in-app chat features.
 - `DOCDASH_CURSOR_CMD` is optional and defaults to `cursor`.
 
-### Run DocDash
+### Run The Web App
 
 ```bash
 npm run dev
 ```
 
 Open http://127.0.0.1:3000
+
+`npm run dev` is only for development.
+
+### Keep The Web App Running In The Background (macOS)
+
+If you want the browser dashboard without manually starting it every time, install the LaunchAgent:
+
+```bash
+npm run docdash:web:install
+```
+
+That command:
+
+- builds the app for production
+- installs a `launchd` user agent
+- starts DocDash automatically at login
+- serves the UI at `http://127.0.0.1:3000`
+
+To remove it:
+
+```bash
+npm run docdash:web:uninstall
+```
 
 ### Make DocDash Available To Codex Everywhere
 
@@ -61,6 +92,8 @@ This repo now ships three agent-facing surfaces:
 - `skills/docdash/` - portable Agent Skills bundle for Codex, ChatGPT Skills, Hermes, and other skills-compatible agents
 - `.claude/agents/docdash-operator.md` - Claude Code project subagent for DocDash-specific tasks
 - `.mcp.json` - project-scoped MCP config exposing `docdash` plus `next-devtools`
+
+The agent surfaces do not depend on the web UI running. They call DocDash through the CLI or MCP server directly.
 
 Start the DocDash MCP server manually if your client does not auto-load `.mcp.json`:
 
