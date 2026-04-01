@@ -22,7 +22,7 @@ Open http://127.0.0.1:3000
 ### Install From GitHub
 
 ```bash
-git clone <your-github-repo-url> Document-Dashboard
+git clone git@github.com:5eanxlee/Document-Dashboard.git
 cd Document-Dashboard
 npm install
 cp .env.example .env.local
