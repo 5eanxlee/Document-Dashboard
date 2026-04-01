@@ -2,16 +2,7 @@
 
 A local-first document dashboard. Register files from anywhere on your Mac, browse them in one place, edit them, and push changes back to the original files.
 
-## Quick Start
-
-```bash
-npm install
-npm run dev
-```
-
-Open http://127.0.0.1:3000
-
-## Setup For Others
+## Getting Started
 
 ### Prerequisites
 
@@ -19,10 +10,10 @@ Open http://127.0.0.1:3000
 - npm
 - Codex app, Codex CLI, or Codex IDE extension if you want the global Codex integration
 
-### Install From GitHub
+### Install
 
 ```bash
-git clone git@github.com:5eanxlee/Document-Dashboard.git
+git clone https://github.com/5eanxlee/Document-Dashboard.git
 cd Document-Dashboard
 npm install
 cp .env.example .env.local
@@ -40,13 +31,14 @@ Copy `.env.example` to `.env.local` and fill in your own values.
 ### Run DocDash
 
 ```bash
-npm install
 npm run dev
 ```
 
+Open http://127.0.0.1:3000
+
 ### Make DocDash Available To Codex Everywhere
 
-From the cloned DocDash repository, run:
+From the cloned repository, run:
 
 ```bash
 npm install

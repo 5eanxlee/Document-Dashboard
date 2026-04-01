@@ -4,7 +4,7 @@
   "private": true,
   "repository": {
     "type": "git",
-    "url": "git@github.com:5eanxlee/Document-Dashboard.git"
+    "url": "git+https://github.com/5eanxlee/Document-Dashboard.git"
   },
   "homepage": "https://github.com/5eanxlee/Document-Dashboard",
   "bugs": {
