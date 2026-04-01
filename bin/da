@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# da — shorthand for docdash CLI
+# Usage: da add file.md
+exec npx tsx "$(dirname "$0")/docdash.ts" "$@"

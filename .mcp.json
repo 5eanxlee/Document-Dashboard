@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "docdash": {
+      "command": "node",
+      "args": ["./node_modules/tsx/dist/cli.mjs", "./bin/docdash-mcp.ts"],
+      "env": {}
+    },
+    "next-devtools": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"],
+      "env": {}
+    }
+  }
+}

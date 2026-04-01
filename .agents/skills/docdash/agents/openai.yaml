@@ -1,0 +1,4 @@
+interface:
+  display_name: "DocDash"
+  short_description: "Operate the DocDash document registry"
+  default_prompt: "Use $docdash to register, inspect, repair, and maintain documents in this DocDash workspace."
