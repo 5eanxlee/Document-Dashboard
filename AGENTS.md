@@ -10,5 +10,6 @@ For DocDash registry or document-management work, load `.agents/skills/docdash/S
 
 - Prefer the project-scoped `docdash` MCP server from `.mcp.json`.
 - Fall back to `npm run docdash ...` from the repo root when MCP is unavailable.
+- For global Claude Code availability outside this repo, run `npm run claude:install` once from the cloned DocDash repository.
 - For global Codex availability outside this repo, run `npm run codex:install` once from the cloned DocDash repository.
 - Do not edit `.docdash/registry.json` by hand; use DocDash interfaces instead.

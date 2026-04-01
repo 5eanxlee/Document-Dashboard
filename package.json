@@ -19,6 +19,8 @@
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
     "lint": "eslint",
+    "claude:install": "tsx scripts/install-claude-global.ts",
+    "claude:uninstall": "tsx scripts/uninstall-claude-global.ts",
     "codex:install": "tsx scripts/install-codex-global.ts",
     "codex:uninstall": "tsx scripts/uninstall-codex-global.ts",
     "docdash": "tsx bin/docdash.ts",
