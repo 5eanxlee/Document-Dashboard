@@ -6,6 +6,7 @@ import { ArrowLeft, FileText, Check, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChatPanel } from "@/components/chat/chat-panel";
+import { CopyablePath } from "@/components/dashboard/copyable-path";
 import type { Doc } from "@/lib/types";
 
 export default function MultiDocChatPage() {
@@ -42,11 +43,11 @@ export default function MultiDocChatPage() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setStarted(false)}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-foreground/70 transition-colors hover:text-foreground dark:text-muted-foreground"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <MessageCircle className="h-5 w-5 text-muted-foreground" />
+              <MessageCircle className="h-5 w-5 text-foreground/60 dark:text-muted-foreground" />
               <h1 className="font-medium">Chat</h1>
               <div className="flex gap-1">
                 {selectedDocs.map((d) => (
@@ -70,10 +71,13 @@ export default function MultiDocChatPage() {
       <header className="border-b bg-card px-6 py-3">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
+            <Link
+              href="/"
+              className="text-foreground/70 transition-colors hover:text-foreground dark:text-muted-foreground"
+            >
               <ArrowLeft className="h-5 w-5" />
             </Link>
-            <MessageCircle className="h-5 w-5 text-muted-foreground" />
+            <MessageCircle className="h-5 w-5 text-foreground/60 dark:text-muted-foreground" />
             <h1 className="font-medium">Multi-Document Chat</h1>
           </div>
           <Button
@@ -89,12 +93,14 @@ export default function MultiDocChatPage() {
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-6">
-        <p className="text-sm text-muted-foreground mb-4">
+        <p className="mb-4 text-sm text-foreground/75 dark:text-muted-foreground">
           Select documents to chat about together.
         </p>
 
         {docs.length === 0 ? (
-          <p className="text-center py-12 text-muted-foreground/50 text-sm">No documents registered.</p>
+          <p className="py-12 text-center text-sm text-foreground/70 dark:text-muted-foreground/50">
+            No documents registered.
+          </p>
         ) : (
           <div className="grid gap-2">
             {docs.map((doc) => {
@@ -105,25 +111,31 @@ export default function MultiDocChatPage() {
                   onClick={() => toggleDoc(doc.id)}
                   className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-left transition-all ${
                     selected
-                      ? "border-primary/50 bg-primary/5"
-                      : "border-transparent hover:bg-card hover:border-border/50"
+                      ? "border-primary bg-primary/5 dark:border-primary"
+                      : "border-black bg-transparent hover:bg-card hover:border-black dark:border-white/35 dark:hover:border-white/50"
                   }`}
                 >
                   <div
-                    className={`flex h-5 w-5 items-center justify-center rounded border shrink-0 transition-colors ${
-                      selected ? "bg-primary border-primary text-primary-foreground" : "border-border"
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors ${
+                      selected
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-black dark:border-white/35"
                     }`}
                   >
                     {selected && <Check className="h-3 w-3" />}
                   </div>
-                  <FileText className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+                  <FileText className="h-4 w-4 shrink-0 text-foreground/55 dark:text-muted-foreground/50" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{doc.title}</p>
-                    <p className="text-[10px] text-muted-foreground/40 font-mono truncate">
-                      {doc.canonicalPath}
-                    </p>
+                    <CopyablePath
+                      path={doc.canonicalPath}
+                      className="text-sm dark:text-[10px]"
+                    />
                   </div>
-                  <Badge variant="outline" className="text-[10px] shrink-0 border-border/50 text-muted-foreground/50">
+                  <Badge
+                    variant="outline"
+                    className="shrink-0 border-border text-[10px] text-foreground/70 dark:border-border/50 dark:text-muted-foreground/50"
+                  >
                     {doc.type}
                   </Badge>
                 </button>

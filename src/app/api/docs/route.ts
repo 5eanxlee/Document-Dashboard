@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAllDocs, ensureDocdashDirs } from "@/lib/registry";
 import { searchDocs, filterDocs, type FilterOptions } from "@/lib/search";
-import { fileExists, hasFileChanged, indexFile } from "@/lib/documents";
+import {
+  fileExists,
+  hasFileChanged,
+  indexFile,
+  createLocalDocFile,
+  type NewLocalDocExtension,
+} from "@/lib/documents";
 import { upsertDoc, updateDoc } from "@/lib/registry";
 
 export const dynamic = "force-dynamic";
@@ -51,5 +57,53 @@ export async function GET(request: NextRequest) {
     docs = searchDocs(docs, query);
   }
 
+  // Sort by modification time (most recent first)
+  docs.sort((a, b) => b.mtimeMs - a.mtimeMs);
+
   return NextResponse.json({ docs });
+}
+
+/** POST /api/docs — Create a new file on disk and register it with DocDash */
+export async function POST(request: NextRequest) {
+  ensureDocdashDirs();
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  }
+
+  const raw = body as Record<string, unknown>;
+  const titleRaw = typeof raw.title === "string" ? raw.title.trim() : "";
+  const displayTitle = titleRaw.slice(0, 200) || "Untitled";
+
+  const extIn = raw.extension;
+  const extension: NewLocalDocExtension =
+    extIn === "mdx" || extIn === "txt" ? extIn : "md";
+
+  const relativeDir =
+    typeof raw.relativeDir === "string" ? raw.relativeDir : undefined;
+
+  let absolutePath: string;
+  try {
+    absolutePath = createLocalDocFile({
+      displayTitle,
+      extension,
+      relativeDir,
+    });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Create failed";
+    return NextResponse.json(
+      { error: message === "Invalid directory" ? "Invalid directory" : "Could not create file" },
+      { status: 400 }
+    );
+  }
+
+  const entry = indexFile(absolutePath);
+  const stored = await upsertDoc(entry);
+  return NextResponse.json({ doc: stored });
 }

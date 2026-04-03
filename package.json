@@ -15,7 +15,7 @@
     "da": "./bin/docdash.ts"
   },
   "scripts": {
-    "dev": "next dev --hostname 127.0.0.1",
+    "dev": "tsx scripts/dev-once.ts",
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
     "lint": "eslint",

@@ -6,7 +6,16 @@ import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { Send, Trash2, Loader2, History, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReactMarkdown from "react-markdown";
+import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
+
+const chatMarkdownComponents: Components = {
+  table: ({ node: _node, children, ...props }) => (
+    <div className="markdown-table-viewport">
+      <table {...props}>{children}</table>
+    </div>
+  ),
+};
 
 interface ChatPanelProps {
   docId?: string;
@@ -172,7 +181,7 @@ export function ChatPanel({ docId, docIds, docTitle }: ChatPanelProps) {
               <button
                 key={t.id}
                 onClick={() => loadThread(t.id)}
-                className={`w-full text-left px-4 py-3 border-b border-border/30 hover:bg-card transition-colors ${
+                className={`w-full text-left px-4 py-3 border-b border-border hover:bg-card transition-colors ${
                   threadId === t.id ? "bg-card" : ""
                 }`}
               >
@@ -250,7 +259,7 @@ export function ChatPanel({ docId, docIds, docTitle }: ChatPanelProps) {
             >
               {msg.role === "assistant" ? (
                 <div className="chat-markdown">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={chatMarkdownComponents}>
                     {msg.parts
                       .filter((p) => p.type === "text")
                       .map((p) => (p as { type: "text"; text: string }).text)
@@ -303,7 +312,7 @@ export function ChatPanel({ docId, docIds, docTitle }: ChatPanelProps) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask about this document..."
-            className="flex-1 bg-card border border-border/50 rounded-md px-3 py-2 text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring"
+            className="flex-1 rounded-md border border-border bg-card px-3 py-2 text-sm placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring"
             disabled={busy}
           />
           <Button type="submit" size="sm" disabled={busy || !input.trim()} className="h-9 w-9 p-0">

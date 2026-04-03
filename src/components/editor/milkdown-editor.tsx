@@ -23,6 +23,23 @@ export function MilkdownEditor({ initialValue, onChange, readOnly, docId }: Milk
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 
+  // Make links directly clickable — capture phase so we intercept before ProseMirror
+  useEffect(() => {
+    const el = editorRef.current;
+    if (!el) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest("a");
+      if (anchor?.href) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.open(anchor.href, "_blank", "noopener");
+      }
+    };
+    el.addEventListener("click", handler, true);
+    return () => el.removeEventListener("click", handler, true);
+  }, []);
+
   useEffect(() => {
     if (!editorRef.current) return;
 

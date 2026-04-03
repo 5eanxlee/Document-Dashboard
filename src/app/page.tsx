@@ -4,12 +4,15 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import { SearchBar } from "@/components/dashboard/search-bar";
 import { DocCard } from "@/components/dashboard/doc-card";
 import { Filters } from "@/components/dashboard/filters";
-import { FileText, RefreshCw, MessageCircle } from "lucide-react";
+import { FileText, RefreshCw, MessageCircle, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { Doc } from "@/lib/types";
+import { NewDocDialog } from "@/components/dashboard/new-doc-dialog";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [docs, setDocs] = useState<Doc[]>([]);
   const [allDocs, setAllDocs] = useState<Doc[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,6 +22,23 @@ export default function DashboardPage() {
   const [activeCollection, setActiveCollection] = useState<string | null>(null);
   const [activeWorkspace, setActiveWorkspace] = useState<string | null>(null);
   const [showPinned, setShowPinned] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("docdash-theme");
+      if (saved === "light" || saved === "dark") setTheme(saved);
+    } catch {}
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    setTheme((prev) => {
+      const next = prev === "dark" ? "light" : "dark";
+      document.documentElement.classList.toggle("dark", next === "dark");
+      localStorage.setItem("docdash-theme", next);
+      return next;
+    });
+  }, []);
 
   const fetchDocs = useCallback(async () => {
     setLoading(true);
@@ -50,6 +70,22 @@ export default function DashboardPage() {
     }
   }, [query, activeType, activeTag, activeCollection, activeWorkspace, showPinned]);
 
+  const handleDelete = useCallback(async (id: string) => {
+    const res = await fetch(`/api/docs/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setDocs((prev) => prev.filter((d) => d.id !== id));
+      setAllDocs((prev) => prev.filter((d) => d.id !== id));
+    }
+  }, []);
+
+  const handleNewDocCreated = useCallback(
+    (id: string) => {
+      void fetchDocs();
+      router.push(`/docs/${id}`);
+    },
+    [fetchDocs, router]
+  );
+
   useEffect(() => {
     const timer = setTimeout(fetchDocs, query ? 300 : 0);
     return () => clearTimeout(timer);
@@ -59,28 +95,56 @@ export default function DashboardPage() {
   const hasFilters = activeType || activeTag || activeCollection || activeWorkspace || showPinned;
 
   return (
-    <div className="min-h-screen">
-      <header className="sticky top-0 z-10 border-b border-border/50 bg-background/80 backdrop-blur-sm">
-        <div className="max-w-5xl mx-auto px-6 py-5">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-3">
-              <FileText className="h-5 w-5 text-muted-foreground" />
-              <h1 className="text-lg font-semibold tracking-tight">DocDash</h1>
-              <span className="text-xs text-muted-foreground/70 font-mono tabular-nums">
-                {allDocs.length} docs
-              </span>
+    <div className="dashboard-surface min-h-screen">
+      <header className="sticky top-0 z-10 border-b border-border/80 bg-background/75 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
+        <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 sm:py-5">
+          <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-card shadow-sm">
+                <FileText className="size-[1.15rem] text-primary" strokeWidth={2} />
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                  <h1 className="text-lg font-semibold tracking-tight sm:text-xl">DocDash</h1>
+                  <span className="font-mono text-[11px] tabular-nums text-muted-foreground sm:text-xs">
+                    {allDocs.length} {allDocs.length === 1 ? "doc" : "docs"}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">Search and open documents in your workspace</p>
+              </div>
             </div>
-            <div className="flex items-center gap-1">
-              <Link href="/chat">
-                <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
-                  <MessageCircle className="h-3.5 w-3.5" />
-                  <span className="text-xs">Chat</span>
+            <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+              <NewDocDialog onCreated={handleNewDocCreated} />
+              <div
+                className="flex items-center gap-0.5 rounded-xl border border-border/60 bg-muted/40 p-0.5 dark:bg-muted/25"
+                role="toolbar"
+                aria-label="Toolbar"
+              >
+                <Link href="/chat">
+                  <Button variant="ghost" size="sm" className="gap-1.5 rounded-lg text-muted-foreground hover:text-foreground">
+                    <MessageCircle className="size-3.5" />
+                    <span className="hidden text-xs sm:inline">Chat</span>
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={fetchDocs}
+                  className="gap-1.5 rounded-lg text-muted-foreground hover:text-foreground"
+                >
+                  <RefreshCw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
+                  <span className="hidden text-xs sm:inline">Refresh</span>
                 </Button>
-              </Link>
-              <Button variant="ghost" size="sm" onClick={fetchDocs} className="gap-2 text-muted-foreground hover:text-foreground">
-                <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-                <span className="text-xs">Refresh</span>
-              </Button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={toggleTheme}
+                  className="rounded-lg text-muted-foreground hover:text-foreground"
+                  title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                >
+                  {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+                </Button>
+              </div>
             </div>
           </div>
           <SearchBar value={query} onChange={setQuery} />
@@ -102,47 +166,63 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-8">
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
         {loading && docs.length === 0 ? (
-          <div className="text-center py-24 text-muted-foreground/60 text-sm">
-            Loading...
+          <div className="space-y-4 py-8" aria-busy="true" aria-label="Loading documents">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className="h-[4.75rem] animate-pulse rounded-xl border border-border/50 bg-card/40"
+                style={{ animationDelay: `${i * 40}ms` }}
+              />
+            ))}
           </div>
         ) : docs.length === 0 ? (
-          <div className="text-center py-24">
-            <FileText className="h-10 w-10 mx-auto text-muted-foreground/30 mb-4" />
-            <h2 className="text-sm font-medium text-muted-foreground">
+          <div className="flex flex-col items-center justify-center px-4 py-20 text-center sm:py-28">
+            <div className="mb-5 flex size-14 items-center justify-center rounded-2xl border border-border/60 bg-muted/50 shadow-inner">
+              <FileText className="size-7 text-muted-foreground" strokeWidth={1.5} />
+            </div>
+            <h2 className="text-base font-semibold tracking-tight">
               {query || hasFilters ? "No matching documents" : "No documents yet"}
             </h2>
-            <p className="text-xs text-muted-foreground/60 mt-2 font-mono">
+            <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
               {query || hasFilters
-                ? "Try adjusting your search or filters."
-                : "Run `da add <file>` to register your first document."}
+                ? "Broaden your search or clear filters to see more."
+                : "Create one with New document, or register files with the DocDash CLI."}
             </p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-10">
             {!hasFilters && pinnedDocs.length > 0 && (
               <section>
-                <h2 className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-widest mb-3">
-                  Pinned
-                </h2>
-                <div className="grid gap-2">
-                  {pinnedDocs.map((doc) => (
-                    <DocCard key={doc.id} doc={doc} />
-                  ))}
+                <div className="mb-4 flex items-center gap-3">
+                  <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Pinned</h2>
+                  <span className="h-px flex-1 bg-border/60" aria-hidden />
                 </div>
+                <ul className="grid list-none gap-2.5 p-0" role="list">
+                  {pinnedDocs.map((doc) => (
+                    <li key={doc.id}>
+                      <DocCard doc={doc} onDelete={handleDelete} />
+                    </li>
+                  ))}
+                </ul>
               </section>
             )}
 
             <section>
-              <h2 className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-widest mb-3">
-                {query ? `Results (${docs.length})` : `All Documents`}
-              </h2>
-              <div className="grid gap-2">
-                {docs.map((doc) => (
-                  <DocCard key={doc.id} doc={doc} />
-                ))}
+              <div className="mb-4 flex items-center gap-3">
+                <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  {query ? `Results · ${docs.length}` : "All documents"}
+                </h2>
+                <span className="h-px flex-1 bg-border/60" aria-hidden />
               </div>
+              <ul className="grid list-none gap-2.5 p-0" role="list">
+                {docs.map((doc) => (
+                  <li key={doc.id}>
+                    <DocCard doc={doc} onDelete={handleDelete} />
+                  </li>
+                ))}
+              </ul>
             </section>
           </div>
         )}

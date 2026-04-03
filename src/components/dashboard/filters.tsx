@@ -40,82 +40,86 @@ export function Filters({
   const hasActiveFilter = activeType || activeTag || activeCollection || activeWorkspace || showPinned;
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <Button
-        variant={showPinned ? "default" : "outline"}
-        size="sm"
-        onClick={() => onPinnedChange(!showPinned)}
-        className="h-7 gap-1"
-      >
-        <Pin className="h-3 w-3" />
-        Pinned
-      </Button>
-
-      {types.map((t) => (
-        <Badge
-          key={t}
-          variant={activeType === t ? "default" : "secondary"}
-          className="cursor-pointer font-mono"
-          onClick={() => onTypeChange(activeType === t ? null : t)}
-        >
-          .{t}
-        </Badge>
-      ))}
-
-      {tags.map((tag) => (
-        <Badge
-          key={tag}
-          variant={activeTag === tag ? "default" : "outline"}
-          className="cursor-pointer"
-          onClick={() => onTagChange(activeTag === tag ? null : tag)}
-        >
-          {tag}
-        </Badge>
-      ))}
-
-      {collections.map((col) => (
-        <Badge
-          key={col}
-          variant={activeCollection === col ? "default" : "outline"}
-          className="cursor-pointer"
-          onClick={() => onCollectionChange(activeCollection === col ? null : col)}
-        >
-          {col}
-        </Badge>
-      ))}
-
-      {workspaces.length > 1 &&
-        workspaces.map((ws) => {
-          const short = ws.split("/").slice(-2).join("/");
-          return (
-            <Badge
-              key={ws}
-              variant={activeWorkspace === ws ? "default" : "outline"}
-              className="cursor-pointer font-mono text-xs"
-              onClick={() => onWorkspaceChange(activeWorkspace === ws ? null : ws)}
-            >
-              {short}
-            </Badge>
-          );
-        })}
-
-      {hasActiveFilter && (
+    <div className="rounded-xl border border-border/60 bg-muted/25 p-3 dark:bg-muted/15">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Filters</span>
+        {hasActiveFilter && (
+          <Button
+            variant="ghost"
+            size="xs"
+            onClick={() => {
+              onTypeChange(null);
+              onTagChange(null);
+              onCollectionChange(null);
+              onWorkspaceChange(null);
+              onPinnedChange(false);
+            }}
+            className="h-6 gap-1 text-muted-foreground hover:text-foreground"
+          >
+            <X className="size-3" />
+            Clear all
+          </Button>
+        )}
+      </div>
+      <div className="flex flex-wrap items-center gap-1.5">
         <Button
-          variant="ghost"
+          variant={showPinned ? "default" : "outline"}
           size="sm"
-          onClick={() => {
-            onTypeChange(null);
-            onTagChange(null);
-            onCollectionChange(null);
-            onWorkspaceChange(null);
-            onPinnedChange(false);
-          }}
-          className="h-7 gap-1 text-muted-foreground"
+          onClick={() => onPinnedChange(!showPinned)}
+          className="h-7 gap-1 rounded-lg shadow-none"
         >
-          <X className="h-3 w-3" />
-          Clear
+          <Pin className="size-3" />
+          Pinned
         </Button>
-      )}
+
+        {types.map((t) => (
+          <Badge
+            key={t}
+            variant={activeType === t ? "default" : "secondary"}
+            className="h-7 cursor-pointer rounded-lg px-2.5 font-mono text-[11px] font-normal transition-colors hover:opacity-90"
+            onClick={() => onTypeChange(activeType === t ? null : t)}
+          >
+            .{t}
+          </Badge>
+        ))}
+
+        {tags.map((tag) => (
+          <Badge
+            key={tag}
+            variant={activeTag === tag ? "default" : "outline"}
+            className="h-7 cursor-pointer rounded-lg px-2.5 text-xs font-normal transition-colors hover:opacity-90"
+            onClick={() => onTagChange(activeTag === tag ? null : tag)}
+          >
+            {tag}
+          </Badge>
+        ))}
+
+        {collections.map((col) => (
+          <Badge
+            key={col}
+            variant={activeCollection === col ? "default" : "outline"}
+            className="h-7 max-w-[12rem] cursor-pointer truncate rounded-lg px-2.5 text-xs font-normal transition-colors hover:opacity-90"
+            onClick={() => onCollectionChange(activeCollection === col ? null : col)}
+          >
+            {col}
+          </Badge>
+        ))}
+
+        {workspaces.length > 1 &&
+          workspaces.map((ws) => {
+            const short = ws.split("/").slice(-2).join("/");
+            return (
+              <Badge
+                key={ws}
+                variant={activeWorkspace === ws ? "default" : "outline"}
+                className="h-7 max-w-[14rem] cursor-pointer truncate rounded-lg px-2.5 font-mono text-[11px] font-normal transition-colors hover:opacity-90"
+                onClick={() => onWorkspaceChange(activeWorkspace === ws ? null : ws)}
+              >
+                {short}
+              </Badge>
+            );
+          })}
+      </div>
     </div>
   );
 }

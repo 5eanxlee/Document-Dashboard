@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { RawEditor } from "@/components/editor/raw-editor";
+import { CopyablePath } from "@/components/dashboard/copyable-path";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,9 +27,13 @@ import {
   Trash2,
   X,
   Plus,
+  Minus,
   MessageCircle,
   PanelRightClose,
   Info,
+  Sun,
+  Moon,
+  Columns2,
 } from "lucide-react";
 import { ChatPanel } from "@/components/chat/chat-panel";
 import type { Doc, DocDetailResponse, SaveResponse } from "@/lib/types";
@@ -68,6 +73,9 @@ export default function DocDetailPage() {
   const [collectionInput, setCollectionInput] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
   const [metaOpen, setMetaOpen] = useState(false);
+  const [zoom, setZoom] = useState(100);
+  const [contentWidth, setContentWidth] = useState<"narrow" | "medium" | "wide" | "full">("medium");
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
 
   const fetchDoc = useCallback(async () => {
     setLoading(true);
@@ -104,6 +112,44 @@ export default function DocDetailPage() {
   useEffect(() => {
     fetchDoc();
   }, [fetchDoc]);
+
+  // Restore view preferences from localStorage
+  useEffect(() => {
+    try {
+      const savedZoom = localStorage.getItem("docdash-zoom");
+      const savedWidth = localStorage.getItem("docdash-width");
+      const savedTheme = localStorage.getItem("docdash-theme");
+      if (savedZoom) setZoom(Number(savedZoom));
+      if (savedWidth) setContentWidth(savedWidth as typeof contentWidth);
+      if (savedTheme === "light" || savedTheme === "dark") setTheme(savedTheme);
+    } catch {}
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    setTheme((prev) => {
+      const next = prev === "dark" ? "light" : "dark";
+      document.documentElement.classList.toggle("dark", next === "dark");
+      localStorage.setItem("docdash-theme", next);
+      return next;
+    });
+  }, []);
+
+  const cycleWidth = useCallback(() => {
+    setContentWidth((prev) => {
+      const order: typeof prev[] = ["narrow", "medium", "wide", "full"];
+      const next = order[(order.indexOf(prev) + 1) % order.length];
+      localStorage.setItem("docdash-width", next);
+      return next;
+    });
+  }, []);
+
+  const adjustZoom = useCallback((delta: number) => {
+    setZoom((prev) => {
+      const next = Math.min(150, Math.max(70, prev + delta));
+      localStorage.setItem("docdash-zoom", String(next));
+      return next;
+    });
+  }, []);
 
   const handleContentChange = useCallback(
     (newContent: string) => {
@@ -177,8 +223,6 @@ export default function DocDetailPage() {
 
   const handleDelete = useCallback(async () => {
     if (!doc) return;
-    if (!confirm("Remove this document from DocDash? (The file will not be deleted.)"))
-      return;
     const res = await fetch(`/api/docs/${doc.id}`, { method: "DELETE" });
     if (res.ok) router.push("/");
   }, [doc, router]);
@@ -252,7 +296,7 @@ export default function DocDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-sm text-muted-foreground/50">Loading...</div>
+        <div className="text-sm text-foreground/70 dark:text-muted-foreground/50">Loading...</div>
       </div>
     );
   }
@@ -260,7 +304,7 @@ export default function DocDetailPage() {
   if (!doc) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-sm text-muted-foreground/50">Document not found</div>
+        <div className="text-sm text-foreground/70 dark:text-muted-foreground/50">Document not found</div>
       </div>
     );
   }
@@ -278,15 +322,15 @@ export default function DocDetailPage() {
           <div className="flex items-center gap-3 min-w-0">
             <Link
               href="/"
-              className="text-muted-foreground hover:text-foreground transition-colors shrink-0 p-1"
+              className="shrink-0 p-1 text-foreground/65 transition-colors hover:text-foreground dark:text-muted-foreground"
             >
               <ArrowLeft className="h-4 w-4" />
             </Link>
             <Separator orientation="vertical" className="h-4" />
-            <TypeIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+            <TypeIcon className="h-4 w-4 shrink-0 text-foreground/60 dark:text-muted-foreground" />
             <h1 className="text-sm font-medium truncate">{doc.title}</h1>
             {doc.pinned && (
-              <Pin className="h-3 w-3 text-muted-foreground shrink-0" />
+              <Pin className="h-3 w-3 shrink-0 text-foreground/60 dark:text-muted-foreground" />
             )}
             {hasUnsavedChanges && (
               <div className="h-2 w-2 rounded-full bg-primary shrink-0" title="Unsaved changes" />
@@ -300,10 +344,10 @@ export default function DocDetailPage() {
               <div className="flex items-center rounded-md border border-border overflow-hidden">
                 <button
                   onClick={() => setEditorMode("rich")}
-                  className={`flex items-center gap-1 px-2.5 h-8 text-xs transition-colors ${
+                  className={`flex h-8 items-center gap-1 px-2.5 text-xs transition-colors ${
                     editorMode === "rich"
                       ? "bg-secondary text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                      : "text-foreground/70 hover:bg-secondary/50 hover:text-foreground dark:text-muted-foreground"
                   }`}
                 >
                   <Eye className="h-3.5 w-3.5" />
@@ -311,10 +355,10 @@ export default function DocDetailPage() {
                 </button>
                 <button
                   onClick={() => setEditorMode("raw")}
-                  className={`flex items-center gap-1 px-2.5 h-8 text-xs transition-colors ${
+                  className={`flex h-8 items-center gap-1 px-2.5 text-xs transition-colors ${
                     editorMode === "raw"
                       ? "bg-secondary text-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                      : "text-foreground/70 hover:bg-secondary/50 hover:text-foreground dark:text-muted-foreground"
                   }`}
                 >
                   <Code className="h-3.5 w-3.5" />
@@ -322,6 +366,56 @@ export default function DocDetailPage() {
                 </button>
               </div>
             )}
+
+            <Separator orientation="vertical" className="h-4 mx-1" />
+
+            {/* View controls: text size, width, theme */}
+            <div className="flex items-center gap-0.5">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => adjustZoom(-10)}
+                className="h-8 w-8"
+                title="Decrease text size"
+                disabled={zoom <= 70}
+              >
+                <Minus className="h-3.5 w-3.5" />
+              </Button>
+              <span className="w-8 text-center font-mono text-[11px] tabular-nums text-foreground/70 dark:text-[10px] dark:text-muted-foreground">
+                {zoom}%
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => adjustZoom(10)}
+                className="h-8 w-8"
+                title="Increase text size"
+                disabled={zoom >= 150}
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={cycleWidth}
+              className="h-8 gap-1.5 px-2.5"
+              title={`Content width: ${contentWidth}`}
+            >
+              <Columns2 className="h-3.5 w-3.5" />
+              <span className="text-[10px] capitalize">{contentWidth}</span>
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="h-8 w-8"
+              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
 
             <Separator orientation="vertical" className="h-4 mx-1" />
 
@@ -397,11 +491,18 @@ export default function DocDetailPage() {
 
       {/* Status banners */}
       {isMissing && (
-        <div className="bg-destructive/5 border-b border-destructive/10 px-4 py-2 shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-destructive text-xs">
-              <AlertTriangle className="h-3.5 w-3.5" />
-              <span>File not found at {doc.canonicalPath}</span>
+        <div className="bg-destructive/5 border-b border-destructive/25 px-4 py-2 shrink-0">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-destructive">
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+              <span className="shrink-0">File not found at</span>
+              <CopyablePath
+                path={doc.canonicalPath}
+                inline
+                multiline
+                variant="destructive"
+                className="text-xs text-destructive hover:border-destructive/30 hover:bg-destructive/10"
+              />
             </div>
             <Button variant="outline" size="sm" onClick={handleRepair} className="h-6 gap-1 text-[10px]">
               <Wrench className="h-3 w-3" />
@@ -412,7 +513,7 @@ export default function DocDetailPage() {
       )}
 
       {conflictContent && (
-        <div className="bg-yellow-500/5 border-b border-yellow-500/10 px-4 py-2 shrink-0">
+        <div className="bg-yellow-500/5 border-b border-yellow-500/25 px-4 py-2 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-yellow-500 text-xs">
               <AlertTriangle className="h-3.5 w-3.5" />
@@ -433,27 +534,57 @@ export default function DocDetailPage() {
         >
           {/* Metadata panel (collapsible) */}
           {metaOpen && (
-            <div className="border-b border-border/30 bg-card/50 px-6 py-4 shrink-0 animate-in slide-in-from-top-2 duration-200">
-              <div className="max-w-3xl mx-auto">
+            <div className="border-b border-border bg-card/50 px-6 py-4 shrink-0 animate-in slide-in-from-top-2 duration-200">
+              <div className={`mx-auto ${
+                contentWidth === "narrow" ? "max-w-3xl" :
+                contentWidth === "medium" ? "max-w-5xl" :
+                contentWidth === "wide" ? "max-w-7xl" :
+                "max-w-none"
+              }`}>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
                   <div>
-                    <span className="text-muted-foreground/50 block mb-1">Path</span>
-                    <p className="font-mono text-[10px] break-all leading-relaxed">{doc.canonicalPath}</p>
+                    <span className="mb-1 block text-xs font-medium text-foreground/62 dark:text-muted-foreground/50">
+                      Path
+                    </span>
+                    <CopyablePath
+                      path={doc.canonicalPath}
+                      multiline
+                      className="text-sm leading-relaxed dark:text-[10px]"
+                    />
                   </div>
                   <div>
-                    <span className="text-muted-foreground/50 block mb-1">Workspace</span>
-                    <p className="font-mono text-[10px] break-all leading-relaxed">{doc.workspaceRoot}</p>
+                    <span className="mb-1 block text-xs font-medium text-foreground/62 dark:text-muted-foreground/50">
+                      Workspace
+                    </span>
+                    <CopyablePath
+                      path={doc.workspaceRoot}
+                      multiline
+                      className="text-sm leading-relaxed dark:text-[10px]"
+                    />
                   </div>
                   <div>
-                    <span className="text-muted-foreground/50 block mb-1">Info</span>
-                    <p className="text-[10px] space-y-0.5">
-                      <span className="block"><span className="text-muted-foreground/50">Type:</span> <span className="font-mono">{doc.type}</span></span>
-                      <span className="block"><span className="text-muted-foreground/50">Hash:</span> <span className="font-mono">{doc.contentHash.slice(0, 8)}</span></span>
-                      <span className="block"><span className="text-muted-foreground/50">Indexed:</span> {new Date(doc.lastIndexedAt).toLocaleDateString()}</span>
+                    <span className="mb-1 block text-xs font-medium text-foreground/62 dark:text-muted-foreground/50">
+                      Info
+                    </span>
+                    <p className="space-y-0.5 text-xs text-foreground/85 dark:text-[10px] dark:text-muted-foreground/70">
+                      <span className="block">
+                        <span className="text-foreground/60 dark:text-muted-foreground/50">Type:</span>{" "}
+                        <span className="font-mono">{doc.type}</span>
+                      </span>
+                      <span className="block">
+                        <span className="text-foreground/60 dark:text-muted-foreground/50">Hash:</span>{" "}
+                        <span className="font-mono">{doc.contentHash.slice(0, 8)}</span>
+                      </span>
+                      <span className="block">
+                        <span className="text-foreground/60 dark:text-muted-foreground/50">Indexed:</span>{" "}
+                        {new Date(doc.lastIndexedAt).toLocaleDateString()}
+                      </span>
                     </p>
                   </div>
                   <div>
-                    <span className="text-muted-foreground/50 block mb-1">Tags</span>
+                    <span className="mb-1 block text-xs font-medium text-foreground/62 dark:text-muted-foreground/50">
+                      Tags
+                    </span>
                     <div className="flex flex-wrap gap-1">
                       {doc.tags.map((tag) => (
                         <Badge key={tag} variant="outline" className="text-[10px] h-5 gap-0.5 px-1.5">
@@ -475,7 +606,9 @@ export default function DocDetailPage() {
                     </div>
                     {doc.collections.length > 0 && (
                       <div className="mt-2">
-                        <span className="text-muted-foreground/50 block mb-1">Collections</span>
+                        <span className="mb-1 block text-xs font-medium text-foreground/62 dark:text-muted-foreground/50">
+                          Collections
+                        </span>
                         <div className="flex flex-wrap gap-1">
                           {doc.collections.map((col) => (
                             <Badge key={col} variant="outline" className="text-[10px] h-5 gap-0.5 px-1.5">
@@ -490,7 +623,7 @@ export default function DocDetailPage() {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/20">
+                <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">
                   <div className="flex gap-0.5">
                     <Input
                       value={collectionInput}
@@ -520,12 +653,20 @@ export default function DocDetailPage() {
 
           {/* Editor */}
           <div className="flex-1 overflow-y-auto">
-            <div className="max-w-3xl mx-auto px-6 py-6">
+            <div
+              className={`mx-auto px-6 py-6 transition-all duration-200 ${
+                contentWidth === "narrow" ? "max-w-3xl" :
+                contentWidth === "medium" ? "max-w-5xl" :
+                contentWidth === "wide" ? "max-w-7xl" :
+                "max-w-none"
+              }`}
+              style={{ zoom: `${zoom}%` } as React.CSSProperties}
+            >
               {isMissing ? (
-                <div className="text-center py-20 text-muted-foreground">
-                  <AlertTriangle className="h-10 w-10 mx-auto mb-4 text-destructive/30" />
+                <div className="py-20 text-center text-foreground/78 dark:text-muted-foreground">
+                  <AlertTriangle className="mx-auto mb-4 h-10 w-10 text-destructive/30" />
                   <p className="text-sm">This file is missing from disk.</p>
-                  <p className="text-xs mt-1 text-muted-foreground/50">
+                  <p className="mt-1 text-xs text-foreground/70 dark:text-muted-foreground/50">
                     Try the repair button above or re-add the file.
                   </p>
                 </div>

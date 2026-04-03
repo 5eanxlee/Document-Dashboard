@@ -12,12 +12,17 @@ interface SearchBarProps {
 export function SearchBar({ value, onChange, placeholder = "Search documents..." }: SearchBarProps) {
   return (
     <div className="relative">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <Search
+        className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+        strokeWidth={2}
+        aria-hidden
+      />
       <Input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="pl-10"
+        aria-label={placeholder}
+        className="h-10 rounded-xl border-border/70 bg-muted/30 pl-10 text-sm shadow-sm transition-shadow placeholder:text-muted-foreground/80 focus-visible:bg-background dark:bg-muted/20 dark:focus-visible:bg-input/30"
       />
     </div>
   );

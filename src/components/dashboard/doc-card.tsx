@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { FileText, FileCode, File, Pin, AlertTriangle } from "lucide-react";
+import { FileText, FileCode, File, Pin, AlertTriangle, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { CopyablePath } from "@/components/dashboard/copyable-path";
 import type { Doc } from "@/lib/types";
 
 const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -28,9 +29,10 @@ function formatRelativeTime(dateStr: string): string {
 interface DocCardProps {
   doc: Doc;
   onPin?: (id: string, pinned: boolean) => void;
+  onDelete?: (id: string) => void;
 }
 
-export function DocCard({ doc, onPin }: DocCardProps) {
+export function DocCard({ doc, onPin, onDelete }: DocCardProps) {
   const Icon = typeIcons[doc.type] || File;
   const isMissing = doc.status === "missing";
   const hasError = doc.status === "parse_error";
@@ -38,64 +40,96 @@ export function DocCard({ doc, onPin }: DocCardProps) {
   return (
     <Link
       href={`/docs/${doc.id}`}
-      className={`group block rounded-lg border px-4 py-3.5 transition-all hover:bg-card hover:border-border/80 ${
+      className={`group block rounded-xl border px-4 py-3.5 shadow-sm transition-[border-color,box-shadow,background-color] duration-200 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
         isMissing
-          ? "border-destructive/30 bg-destructive/5"
-          : "border-transparent bg-transparent"
+          ? "border-destructive/60 bg-destructive/5 hover:bg-destructive/[0.08]"
+          : "border-border/70 bg-card/50 hover:border-border hover:bg-card"
       }`}
     >
       <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-3 min-w-0 flex-1">
-          <Icon className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground/50" />
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          <span
+            className={`mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg border border-border/50 bg-muted/60 ${
+              isMissing ? "border-destructive/30 bg-destructive/10" : ""
+            }`}
+          >
+            <Icon className="size-4 text-muted-foreground" />
+          </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-medium truncate group-hover:text-foreground transition-colors">
+              <h3 className="truncate text-sm font-medium tracking-tight transition-colors group-hover:text-foreground">
                 {doc.title}
               </h3>
               {doc.pinned && (
-                <Pin className="h-3 w-3 shrink-0 text-muted-foreground/50" />
+                <Pin className="size-3 shrink-0 text-primary/80" aria-hidden />
               )}
               {(isMissing || hasError) && (
-                <AlertTriangle className={`h-3 w-3 shrink-0 ${isMissing ? "text-destructive/70" : "text-yellow-500/70"}`} />
+                <AlertTriangle
+                  className={`size-3.5 shrink-0 ${isMissing ? "text-destructive" : "text-amber-500 dark:text-amber-400"}`}
+                  aria-hidden
+                />
               )}
             </div>
             {doc.excerpt && (
-              <p className="text-xs text-muted-foreground/70 mt-1 line-clamp-1">
+              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground sm:line-clamp-1">
                 {doc.excerpt}
               </p>
             )}
-            <div className="flex items-center gap-1.5 mt-2">
-              <span className="text-[10px] font-mono text-muted-foreground/50 uppercase">
-                {doc.type}
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              <span className="font-mono text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                .{doc.type}
               </span>
               {doc.tags.length > 0 && (
-                <span className="text-muted-foreground/30">·</span>
+                <span className="text-muted-foreground/40" aria-hidden>
+                  ·
+                </span>
               )}
               {doc.tags.slice(0, 3).map((tag) => (
-                <Badge key={tag} variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-border/50 text-muted-foreground/60">
+                <Badge
+                  key={tag}
+                  variant="secondary"
+                  className="h-5 border-0 px-2 text-[10px] font-normal text-muted-foreground"
+                >
                   {tag}
                 </Badge>
               ))}
               {doc.tags.length > 3 && (
-                <span className="text-[10px] text-muted-foreground/40">
-                  +{doc.tags.length - 3}
-                </span>
+                <span className="text-[10px] text-muted-foreground">+{doc.tags.length - 3}</span>
               )}
             </div>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-1 shrink-0">
-          <span className="text-[10px] text-muted-foreground/40 tabular-nums">
-            {formatRelativeTime(doc.lastIndexedAt)}
-          </span>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <div className="flex items-center gap-1.5">
+            <time
+              className="text-[11px] tabular-nums text-muted-foreground"
+              dateTime={doc.lastIndexedAt}
+            >
+              {formatRelativeTime(doc.lastIndexedAt)}
+            </time>
+            {onDelete && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  void onDelete(doc.id);
+                }}
+                className="rounded-md p-1.5 text-muted-foreground opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100 group-focus-within:opacity-100"
+                title="Remove from DocDash"
+              >
+                <Trash2 className="size-3.5" />
+              </button>
+            )}
+          </div>
           {isMissing && (
-            <span className="text-[10px] text-destructive/70 font-medium">missing</span>
+            <span className="text-[10px] font-medium text-destructive">Missing file</span>
           )}
         </div>
       </div>
-      <p className="text-[10px] text-muted-foreground/30 mt-1.5 font-mono truncate pl-7">
-        {doc.canonicalPath}
-      </p>
+      <div className="mt-2 min-w-0 pl-12">
+        <CopyablePath path={doc.canonicalPath} className="text-[11px] leading-snug sm:text-xs" />
+      </div>
     </Link>
   );
 }
