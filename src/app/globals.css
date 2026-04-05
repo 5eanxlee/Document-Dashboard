@@ -253,8 +253,6 @@
 }
 
 .milkdown-editor .milkdown table {
-  width: max-content;
-  min-width: 100%;
   border-collapse: collapse;
   margin: 0.75rem 0;
 }
@@ -264,7 +262,8 @@
   border: 1px solid var(--border);
   padding: 0.5rem 0.75rem;
   text-align: left;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .milkdown-editor .milkdown th {
@@ -281,9 +280,207 @@
   margin: 0.75rem 0;
 }
 
+.doc-preview .milkdown {
+  min-height: 400px;
+}
+
+.mermaid-diagram {
+  margin: 1rem 0 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--card) 90%, var(--muted) 10%);
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 6%);
+}
+
+.mermaid-diagram__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in oklab, var(--muted) 72%, transparent);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mermaid-diagram__label,
+.mermaid-diagram__status {
+  color: var(--muted-foreground);
+}
+
+.mermaid-diagram__status--error,
+.mermaid-diagram__error {
+  color: var(--destructive);
+}
+
+.mermaid-diagram__viewport {
+  position: relative;
+  overflow-x: auto;
+  padding: 1rem;
+}
+
+.mermaid-diagram__canvas {
+  display: flex;
+  justify-content: center;
+  min-width: max-content;
+}
+
+.mermaid-diagram__canvas--hidden {
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
+}
+
+.mermaid-diagram__canvas svg {
+  display: block;
+  height: auto;
+  max-width: none;
+}
+
+.mermaid-diagram__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  color: var(--muted-foreground);
+  font-size: 0.9rem;
+}
+
+.mermaid-diagram__fallback {
+  padding: 1rem;
+}
+
+.mermaid-diagram__fallback pre {
+  margin: 0;
+}
+
+.mermaid-diagram__error {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+}
+
 
 .milkdown-editor .milkdown input[type="checkbox"] {
   margin-right: 0.5rem;
+}
+
+
+/* Syntax highlighting — light mode */
+.milkdown-editor .milkdown pre code .token.comment,
+.milkdown-editor .milkdown pre code .token.prolog,
+.milkdown-editor .milkdown pre code .token.doctype,
+.milkdown-editor .milkdown pre code .token.cdata {
+  color: oklch(0.55 0 0);
+  font-style: italic;
+}
+
+.milkdown-editor .milkdown pre code .token.keyword,
+.milkdown-editor .milkdown pre code .token.tag,
+.milkdown-editor .milkdown pre code .token.selector {
+  color: oklch(0.50 0.18 300);
+}
+
+.milkdown-editor .milkdown pre code .token.string,
+.milkdown-editor .milkdown pre code .token.attr-value,
+.milkdown-editor .milkdown pre code .token.char,
+.milkdown-editor .milkdown pre code .token.inserted {
+  color: oklch(0.50 0.16 145);
+}
+
+.milkdown-editor .milkdown pre code .token.function,
+.milkdown-editor .milkdown pre code .token.class-name {
+  color: oklch(0.50 0.16 250);
+}
+
+.milkdown-editor .milkdown pre code .token.number,
+.milkdown-editor .milkdown pre code .token.boolean {
+  color: oklch(0.55 0.18 55);
+}
+
+.milkdown-editor .milkdown pre code .token.operator,
+.milkdown-editor .milkdown pre code .token.punctuation {
+  color: oklch(0.45 0.04 264);
+}
+
+.milkdown-editor .milkdown pre code .token.property,
+.milkdown-editor .milkdown pre code .token.constant,
+.milkdown-editor .milkdown pre code .token.variable {
+  color: oklch(0.55 0.14 20);
+}
+
+.milkdown-editor .milkdown pre code .token.attr-name,
+.milkdown-editor .milkdown pre code .token.builtin {
+  color: oklch(0.55 0.16 200);
+}
+
+.milkdown-editor .milkdown pre code .token.regex,
+.milkdown-editor .milkdown pre code .token.important {
+  color: oklch(0.58 0.18 55);
+}
+
+.milkdown-editor .milkdown pre code .token.deleted {
+  color: oklch(0.55 0.2 25);
+}
+
+/* Syntax highlighting — dark mode overrides */
+.dark .milkdown-editor .milkdown pre code .token.comment,
+.dark .milkdown-editor .milkdown pre code .token.prolog,
+.dark .milkdown-editor .milkdown pre code .token.doctype,
+.dark .milkdown-editor .milkdown pre code .token.cdata {
+  color: oklch(0.58 0.02 264);
+  font-style: italic;
+}
+
+.dark .milkdown-editor .milkdown pre code .token.keyword,
+.dark .milkdown-editor .milkdown pre code .token.tag,
+.dark .milkdown-editor .milkdown pre code .token.selector {
+  color: oklch(0.75 0.16 300);
+}
+
+.dark .milkdown-editor .milkdown pre code .token.string,
+.dark .milkdown-editor .milkdown pre code .token.attr-value,
+.dark .milkdown-editor .milkdown pre code .token.char,
+.dark .milkdown-editor .milkdown pre code .token.inserted {
+  color: oklch(0.76 0.14 145);
+}
+
+.dark .milkdown-editor .milkdown pre code .token.function,
+.dark .milkdown-editor .milkdown pre code .token.class-name {
+  color: oklch(0.78 0.14 250);
+}
+
+.dark .milkdown-editor .milkdown pre code .token.number,
+.dark .milkdown-editor .milkdown pre code .token.boolean {
+  color: oklch(0.78 0.16 55);
+}
+
+.dark .milkdown-editor .milkdown pre code .token.operator,
+.dark .milkdown-editor .milkdown pre code .token.punctuation {
+  color: oklch(0.72 0.02 264);
+}
+
+.dark .milkdown-editor .milkdown pre code .token.property,
+.dark .milkdown-editor .milkdown pre code .token.constant,
+.dark .milkdown-editor .milkdown pre code .token.variable {
+  color: oklch(0.75 0.12 20);
+}
+
+.dark .milkdown-editor .milkdown pre code .token.attr-name,
+.dark .milkdown-editor .milkdown pre code .token.builtin {
+  color: oklch(0.75 0.14 200);
+}
+
+.dark .milkdown-editor .milkdown pre code .token.regex,
+.dark .milkdown-editor .milkdown pre code .token.important {
+  color: oklch(0.78 0.16 55);
+}
+
+.dark .milkdown-editor .milkdown pre code .token.deleted {
+  color: oklch(0.72 0.18 25);
 }
 
 /* Chat markdown styles */

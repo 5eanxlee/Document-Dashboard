@@ -6,22 +6,30 @@ import { commonmark } from "@milkdown/kit/preset/commonmark";
 import { gfm } from "@milkdown/kit/preset/gfm";
 import { history } from "@milkdown/kit/plugin/history";
 import { listener, listenerCtx } from "@milkdown/kit/plugin/listener";
+import { prism, prismConfig } from "@milkdown/plugin-prism";
+import { refractor } from "refractor";
+import mermaidSyntax from "refractor/mermaid";
 import { nord } from "@milkdown/theme-nord";
 import "@milkdown/theme-nord/style.css";
 
 interface MilkdownEditorProps {
   initialValue: string;
   onChange: (markdown: string) => void;
-  readOnly?: boolean;
   docId: string;
 }
 
-export function MilkdownEditor({ initialValue, onChange, readOnly, docId }: MilkdownEditorProps) {
+if (!refractor.registered("mermaid")) {
+  refractor.register(mermaidSyntax);
+}
+
+export function MilkdownEditor({ initialValue, onChange, docId }: MilkdownEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const editorInstanceRef = useRef<Editor | null>(null);
-  const prevDocIdRef = useRef<string>(docId);
   const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   // Make links directly clickable — capture phase so we intercept before ProseMirror
   useEffect(() => {
@@ -44,15 +52,10 @@ export function MilkdownEditor({ initialValue, onChange, readOnly, docId }: Milk
     if (!editorRef.current) return;
 
     const el = editorRef.current;
+    let cancelled = false;
 
-    // If docId changed, destroy and rebuild
-    if (editorInstanceRef.current && prevDocIdRef.current !== docId) {
-      editorInstanceRef.current.destroy();
-      editorInstanceRef.current = null;
-    }
-    prevDocIdRef.current = docId;
+    el.innerHTML = "";
 
-    // Build the editor
     const buildEditor = async () => {
       try {
         const editor = await Editor.make()
@@ -63,14 +66,25 @@ export function MilkdownEditor({ initialValue, onChange, readOnly, docId }: Milk
             ctx.get(listenerCtx).markdownUpdated((_ctx, markdown) => {
               onChangeRef.current(markdown);
             });
+            ctx.set(prismConfig.key, {
+              configureRefractor: () => refractor,
+            });
           })
           .use(commonmark)
           .use(gfm)
           .use(history)
           .use(listener)
+          .use(prism)
           .create();
 
+        if (cancelled) {
+          editor.destroy();
+          return;
+        }
+
         editorInstanceRef.current = editor;
+
+
       } catch (err) {
         console.error("Failed to initialize Milkdown editor:", err);
       }
@@ -79,8 +93,10 @@ export function MilkdownEditor({ initialValue, onChange, readOnly, docId }: Milk
     buildEditor();
 
     return () => {
+      cancelled = true;
       editorInstanceRef.current?.destroy();
       editorInstanceRef.current = null;
+      el.innerHTML = "";
     };
   }, [docId, initialValue]);
 

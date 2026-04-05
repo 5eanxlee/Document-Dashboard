@@ -34,6 +34,8 @@ import {
   Sun,
   Moon,
   Columns2,
+  Copy,
+  Check,
 } from "lucide-react";
 import { ChatPanel } from "@/components/chat/chat-panel";
 import type { Doc, DocDetailResponse, SaveResponse } from "@/lib/types";
@@ -51,7 +53,20 @@ const MilkdownEditor = dynamic(
   }
 );
 
-type EditorMode = "rich" | "raw";
+const MarkdownPreview = dynamic(
+  () =>
+    import("@/components/markdown/markdown-preview").then((m) => ({
+      default: m.MarkdownPreview,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="min-h-[400px] animate-pulse bg-muted/30 rounded-lg" />
+    ),
+  }
+);
+
+type EditorMode = "rich" | "preview" | "raw";
 
 export default function DocDetailPage() {
   const params = useParams();
@@ -75,6 +90,7 @@ export default function DocDetailPage() {
   const [metaOpen, setMetaOpen] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [contentWidth, setContentWidth] = useState<"narrow" | "medium" | "wide" | "full">("medium");
+  const [copied, setCopied] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
 
   const fetchDoc = useCallback(async () => {
@@ -112,6 +128,13 @@ export default function DocDetailPage() {
   useEffect(() => {
     fetchDoc();
   }, [fetchDoc]);
+
+  useEffect(() => {
+    if (!doc) return;
+    if (doc.type === "txt" || (doc.type === "mdx" && editedContent.includes("import "))) {
+      setEditorMode("raw");
+    }
+  }, [doc, editedContent]);
 
   // Restore view preferences from localStorage
   useEffect(() => {
@@ -312,6 +335,8 @@ export default function DocDetailPage() {
   const TypeIcon =
     doc.type === "md" ? FileText : doc.type === "mdx" ? FileCode : File;
   const isMissing = fileStatus === "missing" || doc.status === "missing";
+  const hasRestrictedMdxImports = doc.type === "mdx" && editedContent.includes("import ");
+  const supportsVisualModes = doc.type !== "txt" && !hasRestrictedMdxImports;
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
@@ -342,17 +367,31 @@ export default function DocDetailPage() {
             {/* Editor mode toggle */}
             {doc.type !== "txt" && (
               <div className="flex items-center rounded-md border border-border overflow-hidden">
-                <button
-                  onClick={() => setEditorMode("rich")}
-                  className={`flex h-8 items-center gap-1 px-2.5 text-xs transition-colors ${
-                    editorMode === "rich"
-                      ? "bg-secondary text-foreground"
-                      : "text-foreground/70 hover:bg-secondary/50 hover:text-foreground dark:text-muted-foreground"
-                  }`}
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Rich</span>
-                </button>
+                {supportsVisualModes && (
+                  <>
+                    <button
+                      onClick={() => setEditorMode("rich")}
+                      className={`flex h-8 items-center gap-1.5 px-2.5 text-xs transition-colors ${
+                        editorMode === "rich"
+                          ? "bg-secondary text-foreground"
+                          : "text-foreground/70 hover:bg-secondary/50 hover:text-foreground dark:text-muted-foreground"
+                      }`}
+                    >
+                      <span className="hidden sm:inline font-medium">Edit</span>
+                    </button>
+                    <button
+                      onClick={() => setEditorMode("preview")}
+                      className={`flex h-8 items-center gap-1 px-2.5 text-xs transition-colors ${
+                        editorMode === "preview"
+                          ? "bg-secondary text-foreground"
+                          : "text-foreground/70 hover:bg-secondary/50 hover:text-foreground dark:text-muted-foreground"
+                      }`}
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">Preview</span>
+                    </button>
+                  </>
+                )}
                 <button
                   onClick={() => setEditorMode("raw")}
                   className={`flex h-8 items-center gap-1 px-2.5 text-xs transition-colors ${
@@ -477,10 +516,27 @@ export default function DocDetailPage() {
             </Button>
 
             <Button
+              onClick={() => {
+                navigator.clipboard.writeText(editedContent).then(() => {
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                });
+              }}
+              disabled={isMissing}
+              variant="ghost"
+              size="sm"
+              className="h-8 gap-2 px-3 ml-1"
+              title="Copy document to clipboard"
+            >
+              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+              <span className="text-xs">{copied ? "Copied" : "Copy"}</span>
+            </Button>
+
+            <Button
               onClick={handleSave}
               disabled={!hasUnsavedChanges || saving || isMissing}
               size="sm"
-              className="h-8 gap-2 px-4 ml-1"
+              className="h-8 gap-2 px-4"
             >
               <Save className="h-3.5 w-3.5" />
               <span className="text-xs">{saving ? "Saving..." : saveMessage === "Saved" ? "Saved" : "Save"}</span>
@@ -670,13 +726,15 @@ export default function DocDetailPage() {
                     Try the repair button above or re-add the file.
                   </p>
                 </div>
-              ) : editorMode === "rich" && doc.type !== "txt" ? (
+              ) : editorMode === "rich" && supportsVisualModes ? (
                 <MilkdownEditor
-                  key={doc.id + "-" + doc.contentHash}
-                  initialValue={content}
+                  key={doc.id + "-" + (liveHash ?? doc.contentHash)}
+                  initialValue={editedContent}
                   onChange={handleContentChange}
                   docId={doc.id}
                 />
+              ) : editorMode === "preview" && supportsVisualModes ? (
+                <MarkdownPreview content={editedContent} />
               ) : (
                 <RawEditor
                   value={editedContent}

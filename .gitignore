@@ -43,3 +43,6 @@ next-env.d.ts
 
 # docdash local state
 .docdash/
+
+# claude code — local worktrees (machine-specific)
+.claude/worktrees/

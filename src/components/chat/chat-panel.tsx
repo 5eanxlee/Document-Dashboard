@@ -50,10 +50,25 @@ export function ChatPanel({ docId, docIds, docTitle }: ChatPanelProps) {
   const busy = status === "streaming" || status === "submitted";
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const userScrolledUp = useRef(false);
 
-  // Auto-scroll on new messages
+  // Track whether user has scrolled away from the bottom
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+    const el = scrollRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+      userScrolledUp.current = distanceFromBottom > 60;
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Auto-scroll only when the user is near the bottom
+  useEffect(() => {
+    if (!userScrolledUp.current) {
+      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+    }
   }, [messages]);
 
   useEffect(() => {

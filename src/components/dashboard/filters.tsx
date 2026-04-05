@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pin, X } from "lucide-react";
+import { ChevronDown, Pin, X } from "lucide-react";
 import type { Doc } from "@/lib/types";
 
 interface FiltersProps {
@@ -38,11 +39,38 @@ export function Filters({
   const workspaces = [...new Set(docs.map((d) => d.workspaceRoot))].sort();
 
   const hasActiveFilter = activeType || activeTag || activeCollection || activeWorkspace || showPinned;
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
+
+  const activeCount = [
+    activeType,
+    activeTag,
+    activeCollection,
+    activeWorkspace,
+    showPinned,
+  ].filter(Boolean).length;
 
   return (
     <div className="rounded-xl border border-border/60 bg-muted/25 p-3 dark:bg-muted/15">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Filters</span>
+      <div className="flex items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={() => setFiltersExpanded((open) => !open)}
+          aria-expanded={filtersExpanded}
+          className="flex min-w-0 flex-1 items-center gap-2 rounded-lg py-1 text-left outline-none ring-offset-background transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <ChevronDown
+            className={`size-4 shrink-0 text-muted-foreground transition-transform ${filtersExpanded ? "rotate-180" : ""}`}
+            aria-hidden
+          />
+          <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            Filters
+          </span>
+          {hasActiveFilter && !filtersExpanded && (
+            <Badge variant="secondary" className="h-5 min-w-5 justify-center rounded-md px-1.5 font-mono text-[10px] tabular-nums">
+              {activeCount}
+            </Badge>
+          )}
+        </button>
         {hasActiveFilter && (
           <Button
             variant="ghost"
@@ -54,14 +82,15 @@ export function Filters({
               onWorkspaceChange(null);
               onPinnedChange(false);
             }}
-            className="h-6 gap-1 text-muted-foreground hover:text-foreground"
+            className="h-6 shrink-0 gap-1 text-muted-foreground hover:text-foreground"
           >
             <X className="size-3" />
             Clear all
           </Button>
         )}
       </div>
-      <div className="flex flex-wrap items-center gap-1.5">
+      {filtersExpanded && (
+      <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border/40 pt-3">
         <Button
           variant={showPinned ? "default" : "outline"}
           size="sm"
@@ -120,6 +149,7 @@ export function Filters({
             );
           })}
       </div>
+      )}
     </div>
   );
 }

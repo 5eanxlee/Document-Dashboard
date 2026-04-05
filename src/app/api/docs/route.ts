@@ -57,8 +57,8 @@ export async function GET(request: NextRequest) {
     docs = searchDocs(docs, query);
   }
 
-  // Sort by modification time (most recent first)
-  docs.sort((a, b) => b.mtimeMs - a.mtimeMs);
+  // Sort by registration time (most recently added first)
+  docs.sort((a, b) => new Date(b.lastIndexedAt).getTime() - new Date(a.lastIndexedAt).getTime());
 
   return NextResponse.json({ docs });
 }
