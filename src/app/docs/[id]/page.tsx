@@ -23,6 +23,7 @@ import {
   File,
   Code,
   Eye,
+  PenLine,
   Wrench,
   Trash2,
   X,
@@ -370,6 +371,8 @@ export default function DocDetailPage() {
                 {supportsVisualModes && (
                   <>
                     <button
+                      type="button"
+                      title="Rich edit"
                       onClick={() => setEditorMode("rich")}
                       className={`flex h-8 items-center gap-1.5 px-2.5 text-xs transition-colors ${
                         editorMode === "rich"
@@ -377,6 +380,7 @@ export default function DocDetailPage() {
                           : "text-foreground/70 hover:bg-secondary/50 hover:text-foreground dark:text-muted-foreground"
                       }`}
                     >
+                      <PenLine className="h-3.5 w-3.5 shrink-0" />
                       <span className="hidden sm:inline font-medium">Edit</span>
                     </button>
                     <button

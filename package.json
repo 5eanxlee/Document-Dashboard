@@ -21,6 +21,8 @@
     "lint": "eslint",
     "codex:install": "tsx scripts/install-codex-global.ts",
     "codex:uninstall": "tsx scripts/uninstall-codex-global.ts",
+    "claude:install": "tsx scripts/install-claude-global.ts",
+    "claude:uninstall": "tsx scripts/uninstall-claude-global.ts",
     "docdash:web:install": "tsx scripts/install-web-service.ts",
     "docdash:web:uninstall": "tsx scripts/uninstall-web-service.ts",
     "docdash": "tsx bin/docdash.ts",
